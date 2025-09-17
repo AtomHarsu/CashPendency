@@ -1,9 +1,6 @@
-import 'package:cash_pendency/src/features/auth/login.dart';
 import 'package:cash_pendency/src/features/auth/login_provider.dart';
-import 'package:cash_pendency/src/features/cash_pendency/cash_pendency.dart';
 import 'package:cash_pendency/src/features/cash_pendency/cash_pendency_provider.dart';
 import 'package:cash_pendency/src/features/splash/splashscreen.dart';
-import 'package:cash_pendency/src/helper/api.dart';
 import 'package:cash_pendency/src/helper/hive_localstorage.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';

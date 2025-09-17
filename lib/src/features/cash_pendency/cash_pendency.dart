@@ -22,6 +22,8 @@ class _CashPendencyState extends State<CashPendency> {
   DateTime _focusedDay = DateTime.now();
   DateTime? selectedDay;
   int _selectedTabIndex = 0;
+  final ScrollController _leftScrollController = ScrollController();
+  final ScrollController _rightScrollController = ScrollController();
 
   @override
   void initState() {
@@ -70,9 +72,7 @@ class _CashPendencyState extends State<CashPendency> {
       selectedCompanies[0] = true;
       selectedCompany = cashPendencyProvider!.companyList[0].text ?? '';
     }
-
-    setState(() {}); // Update UI
-
+    setState(() {});
     if (cashPendencyProvider!.stateList.isNotEmpty) {
       cashPendencyProvider!.getCashPendencyGroupReport(
         selectedDate,
@@ -88,32 +88,24 @@ class _CashPendencyState extends State<CashPendency> {
   void _applyFilter() {
     String? selectedCompanyId;
     List<String> selectedStateIds = [];
-
-    // Get selected company ID
     for (int i = 0; i < cashPendencyProvider!.companyList.length; i++) {
       if (i < selectedCompanies.length && selectedCompanies[i]) {
         selectedCompanyId = cashPendencyProvider!.companyList[i].id;
         break;
       }
     }
-
-    // Get selected state IDs
     for (int i = 0; i < cashPendencyProvider!.stateList.length; i++) {
       if (i < selectedStates.length && selectedStates[i]) {
         selectedStateIds.add(cashPendencyProvider!.stateList[i].id ?? '');
       }
     }
-
-    // If no states selected, use first state as default
     if (selectedStateIds.isEmpty &&
         cashPendencyProvider!.stateList.isNotEmpty) {
       selectedStateIds.add(cashPendencyProvider!.stateList[0].id ?? '');
     }
-
     print(
       'Applying filter with: date=$selectedDate, company=$selectedCompanyId, states=$selectedStateIds',
     );
-
     cashPendencyProvider!.getCashPendencyGroupReport(
       selectedDate,
       _selectedTabIndex == 0 ? 'BRANCH_ID' : 'TYP_ID',
@@ -705,21 +697,120 @@ class _CashPendencyState extends State<CashPendency> {
     );
   }
 
+  Widget _buildHeaderCell(
+    String text,
+    double width, {
+    bool isReportTitle = false,
+  }) {
+    return Container(
+      width: width,
+      height: 50,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isReportTitle ? Colors.white : null,
+        border: Border.all(color: Colors.grey.shade300, width: 0.5),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w500,
+            color: Color(0xff808080),
+            fontSize: 12,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataCell(
+    String text,
+    double width, {
+    bool isReportTitle = false,
+    bool hasGradient = false,
+  }) {
+    return Container(
+      width: width,
+      height: 50,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isReportTitle ? Colors.white : null,
+        gradient: hasGradient
+            ? LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Color(0xFFFFD6BF), Color(0xFFFFFFFF)],
+                stops: [0.0, 0.5],
+              )
+            : null,
+        boxShadow: isReportTitle
+            ? [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: Offset(2, 2),
+                ),
+              ]
+            : null,
+        border: Border.all(color: Colors.grey.shade300, width: 0.5),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: GoogleFonts.montserrat(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          'Cash Pendency',
-          style: GoogleFonts.montserrat(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
-        ),
         backgroundColor: Colors.white,
-        centerTitle: true,
+        title: Row(
+          children: [
+            Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+            const SizedBox(width: 32),
+            Icon(Icons.close, color: Colors.black, size: 20),
+            const SizedBox(width: 16),
+            Text(
+              'Cash Pendency',
+              style: GoogleFonts.montserrat(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'Menu',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFFFFF6B1B),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Row(
+              children: [
+                Icon(Icons.circle, color: Colors.black, size: 6),
+                SizedBox(width: 2),
+                Icon(Icons.circle, color: Colors.black, size: 6),
+                SizedBox(width: 2),
+                Icon(Icons.circle, color: Colors.black, size: 6),
+              ],
+            ),
+          ],
+        ),
       ),
       body: Consumer<CashPendencyProvider>(
         builder: (context, provider, child) {
@@ -751,7 +842,6 @@ class _CashPendencyState extends State<CashPendency> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Expanded(
                       child: GestureDetector(
@@ -772,20 +862,23 @@ class _CashPendencyState extends State<CashPendency> {
                         ),
                       ),
                     ),
-
-                    GestureDetector(
-                      onTap: _showFilterBottomSheet,
-                      child: Row(
-                        children: [
-                          Text(
-                            'Filter',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              color: Colors.black,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: GestureDetector(
+                        onTap: _showFilterBottomSheet,
+                        child: Row(
+                          children: [
+                            Text(
+                              'Filter',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
-                          SvgPicture.asset('assets/filter.svg'),
-                        ],
+                            const SizedBox(width: 8),
+                            SvgPicture.asset('assets/filter.svg'),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -826,9 +919,7 @@ class _CashPendencyState extends State<CashPendency> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFFFF6B1B),
-                                ),
+                                color: Color(0xfffFFF6F1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -840,7 +931,7 @@ class _CashPendencyState extends State<CashPendency> {
                                     size: 16,
                                   ),
                                   Text(
-                                    'Previous',
+                                    'Prev',
                                     style: GoogleFonts.montserrat(
                                       fontSize: 12,
                                       color: const Color(0xFFFF6B1B),
@@ -850,12 +941,18 @@ class _CashPendencyState extends State<CashPendency> {
                               ),
                             ),
                           ),
-                          Text(
-                            selectedDate,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                selectedDate,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SvgPicture.asset('assets/calender.svg'),
+                            ],
                           ),
                           GestureDetector(
                             onTap: () {
@@ -874,9 +971,8 @@ class _CashPendencyState extends State<CashPendency> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFFFF6B1B),
-                                ),
+                                color: Color(0xfffFFF6F1),
+
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -901,70 +997,121 @@ class _CashPendencyState extends State<CashPendency> {
                         ],
                       ),
                     ),
-                    // Tab Bar
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  _selectedTabIndex = 0;
-                                  _applyFilter();
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  child: Text(
-                                    'Branch Wise',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: _selectedTabIndex == 0
-                                          ? const Color(0xFFFF6B1B)
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                ),
+                    SizedBox(height: 8),
+                    // Landscape and Custom Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Cash Pendency',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  _selectedTabIndex = 1;
-                                  _applyFilter();
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  child: Text(
-                                    'Branch Type Wise',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: _selectedTabIndex == 1
-                                          ? const Color(0xFFFF6B1B)
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            height: 2,
-                            width: _selectedTabIndex == 0 ? 80 : 120,
-                            color: const Color(0xFFFF6B1B),
-                            margin: EdgeInsets.only(
-                              left: _selectedTabIndex == 0 ? 16 : 140,
                             ),
+                            SizedBox(width: 4),
+                            SvgPicture.asset('assets/cp.svg'),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Landscape',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                SvgPicture.asset('assets/landscape.svg'),
+                              ],
+                            ),
+                            const SizedBox(width: 16),
+                            Row(
+                              children: [
+                                Text(
+                                  'Custom',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                SvgPicture.asset('assets/custome.svg'),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Divider(),
+                    // Tab Bar
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                _selectedTabIndex = 0;
+                                _applyFilter();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  'Branch Wise',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: _selectedTabIndex == 0
+                                        ? const Color(0xFFFF6B1B)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                _selectedTabIndex = 1;
+                                _applyFilter();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  'Branch Type Wise',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: _selectedTabIndex == 1
+                                        ? const Color(0xFFFF6B1B)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          height: 2,
+                          width: _selectedTabIndex == 0 ? 80 : 120,
+                          color: const Color(0xFFFF6B1B),
+                          margin: EdgeInsets.only(
+                            left: _selectedTabIndex == 0 ? 16 : 140,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -979,7 +1126,7 @@ class _CashPendencyState extends State<CashPendency> {
                   ),
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFFF6B1B)),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1025,137 +1172,148 @@ class _CashPendencyState extends State<CashPendency> {
                           ),
                         ),
                       )
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [Color(0xFFFFD6BF), Color(0xFFFFFFFF)],
-                                stops: [0.0, 0.12],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                border: TableBorder.all(
-                                  color: Colors.grey,
-                                  width: 1,
-                                ),
-                                columnSpacing: 15,
-                                headingRowHeight: 50,
-                                columns: [
-                                  DataColumn(
-                                    label: Text(
-                                      'Report Title',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xfff808080),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Total Cash',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xfff808080),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Prev Total Cash',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xfff808080),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Change %',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xfff808080),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Report ID',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xfff808080),
-                                      ),
-                                    ),
+                    : Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            // Fixed Report Title Column
+                            Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: Offset(3, 0),
                                   ),
                                 ],
-                                rows: provider.cashPendencyList
-                                    .map(
-                                      (pendency) => DataRow(
-                                        cells: [
-                                          DataCell(
-                                            Text(
-                                              pendency.reportTitle ?? 'N/A',
-                                              style: GoogleFonts.montserrat(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black,
-                                              ),
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildHeaderCell(
+                                    'Report Title',
+                                    150,
+                                    isReportTitle: true,
+                                  ),
+                                  Expanded(
+                                    child:
+                                        NotificationListener<
+                                          ScrollNotification
+                                        >(
+                                          onNotification: (notification) {
+                                            if (notification
+                                                    is ScrollUpdateNotification &&
+                                                _rightScrollController
+                                                    .hasClients) {
+                                              _rightScrollController.animateTo(
+                                                _leftScrollController.offset,
+                                                duration: Duration(
+                                                  milliseconds: 1,
+                                                ),
+                                                curve: Curves.linear,
+                                              );
+                                            }
+                                            return false;
+                                          },
+                                          child: SingleChildScrollView(
+                                            controller: _leftScrollController,
+                                            physics: ClampingScrollPhysics(),
+                                            child: Column(
+                                              children: provider
+                                                  .cashPendencyList
+                                                  .map(
+                                                    (
+                                                      pendency,
+                                                    ) => _buildDataCell(
+                                                      pendency.reportTitle ??
+                                                          'N/A',
+                                                      150,
+                                                      isReportTitle: true,
+                                                      hasGradient: true,
+                                                    ),
+                                                  )
+                                                  .toList(),
                                             ),
                                           ),
-                                          DataCell(
-                                            Text(
-                                              pendency.totalCash!.toString(),
-                                              style: GoogleFonts.montserrat(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                          DataCell(
-                                            Text(
-                                              pendency.prevTotalCash.toString(),
-                                              style: GoogleFonts.montserrat(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                          DataCell(
-                                            Text(
-                                              '${pendency.changeInPer ?? 0}%',
-                                              style: GoogleFonts.montserrat(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                          DataCell(
-                                            Text(
-                                              pendency.reportId!.toString(),
-                                              style: GoogleFonts.montserrat(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                    .toList(),
+                                        ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
+                            // Scrollable Data Columns
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        _buildHeaderCell('Total Cash', 120),
+                                        _buildHeaderCell(
+                                          'Prev Total Cash',
+                                          140,
+                                        ),
+                                        _buildHeaderCell('Change %', 100),
+                                        _buildHeaderCell('Report ID', 100),
+                                      ],
+                                    ),
+                                    Expanded(
+                                      child: NotificationListener<ScrollNotification>(
+                                        onNotification: (notification) {
+                                          if (notification
+                                                  is ScrollUpdateNotification &&
+                                              _leftScrollController
+                                                  .hasClients) {
+                                            _leftScrollController.animateTo(
+                                              _rightScrollController.offset,
+                                              duration: Duration(
+                                                milliseconds: 1,
+                                              ),
+                                              curve: Curves.linear,
+                                            );
+                                          }
+                                          return false;
+                                        },
+                                        child: SingleChildScrollView(
+                                          controller: _rightScrollController,
+                                          physics: ClampingScrollPhysics(),
+                                          child: Column(
+                                            children: provider.cashPendencyList
+                                                .map(
+                                                  (pendency) => Row(
+                                                    children: [
+                                                      _buildDataCell(
+                                                        pendency.totalCash!
+                                                            .toString(),
+                                                        120,
+                                                      ),
+                                                      _buildDataCell(
+                                                        pendency.prevTotalCash
+                                                            .toString(),
+                                                        140,
+                                                      ),
+                                                      _buildDataCell(
+                                                        '${pendency.changeInPer ?? 0}%',
+                                                        100,
+                                                      ),
+                                                      _buildDataCell(
+                                                        pendency.reportId!
+                                                            .toString(),
+                                                        100,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
               ),

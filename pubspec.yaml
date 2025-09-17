@@ -27,3 +27,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/filter.svg
+    - assets/calender.svg
+    - assets/cp.svg
+    - assets/landscape.svg
+    - assets/custome.svg

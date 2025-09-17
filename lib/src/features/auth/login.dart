@@ -2,6 +2,7 @@ import 'package:cash_pendency/src/features/auth/login_provider.dart';
 import 'package:cash_pendency/src/features/cash_pendency/cash_pendency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -46,10 +47,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       decoration: InputDecoration(
                         labelText: 'Username',
+                        labelStyle: GoogleFonts.montserrat(),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
+                      style: GoogleFonts.montserrat(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter username ';
@@ -62,10 +65,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        labelStyle: GoogleFonts.montserrat(),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
+                      style: GoogleFonts.montserrat(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter password';
@@ -93,13 +98,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           } else if (value == 'false') {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Login Failed')),
+                              SnackBar(
+                                content: Text(
+                                  'Login Failed',
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                              ),
                             );
                             return;
                           } else {
                             ScaffoldMessenger.of(
                               context,
-                            ).showSnackBar(SnackBar(content: Text(value)));
+                            ).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  value,
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                              ),
+                            );
                             return;
                           }
                         });
@@ -115,9 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: const EdgeInsets.all(12.0),
                             child: Text(
                               'Login',
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: Colors.white,
                                 fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
